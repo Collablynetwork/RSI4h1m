@@ -144,10 +144,10 @@ const logBuySignal = (symbol, rsi4h, rsi1m, buyPrice, sellPrice, duration, botto
   const timestamp = moment().format('YYYY-MM-DD HH:mm:ss');
   const logData = `${timestamp},${symbol},${rsi4h},${rsi1m},${buyPrice},${sellPrice},${duration},${bottomPrice},${percentageDrop},${btcChange},${btcChange30m}\n`;
 
-  fs.appendFile(BUY_SIGNAL_LOG_FILE, logData, (err) => {
-    if (err) console.error('Error writing to buy_signals.csv:', err);
-    else console.log(`Logged Buy Signal for ${symbol}`);
-  });
+//  fs.appendFile(BUY_SIGNAL_LOG_FILE, logData, (err) => {
+//    if (err) console.error('Error writing to buy_signals.csv:', err);
+//    else console.log(`Logged Buy Signal for ${symbol}`);
+//  });
 };
 
 // Handle RSI logic
