@@ -9,7 +9,7 @@ const BUY_SIGNAL_LOG_FILE = './buy_signals.csv';
 
 // Global constants
 const RSI_PERIOD = 14;
-const RSI_THRESHOLD_4h = 60;
+const RSI_THRESHOLD_15m = 60;
 const RSI_THRESHOLD_1m = 10;
 
 // Global trackers
@@ -22,12 +22,12 @@ const btcPriceHistory = [];
 // Initialize log files
 const initializeLogFiles = () => {
   if (!fs.existsSync(RSI_LOG_FILE)) {
-    fs.writeFileSync(RSI_LOG_FILE, 'Timestamp,Symbol,RSI_4h,RSI_1m,Current Price\n');
+    fs.writeFileSync(RSI_LOG_FILE, 'Timestamp,Symbol,RSI_15m,RSI_1m,Current Price\n');
   }
   if (!fs.existsSync(BUY_SIGNAL_LOG_FILE)) {
     fs.writeFileSync(
       BUY_SIGNAL_LOG_FILE,
-      'Timestamp,Symbol,RSI_4h,RSI_1m,Buy Price,Sell Price,Duration,Bottom Price,Percentage Drop,BTC Change,BTC 30m Change\n'
+      'Timestamp,Symbol,RSI_15m,RSI_1m,Buy Price,Sell Price,Duration,Bottom Price,Percentage Drop,BTC Change,BTC 30m Change\n'
     );
   }
 };
@@ -129,9 +129,9 @@ const fetchCandlestickData = async (symbol, interval) => {
 };
 
 // Log RSI and price data
-const logRSIAndPrice = (symbol, rsi4h, rsi1m, currentPrice) => {
+const logRSIAndPrice = (symbol, rsi15m, rsi1m, currentPrice) => {
   const timestamp = moment().format('YYYY-MM-DD HH:mm:ss');
-  const logData = `${timestamp},${symbol},${rsi4h},${rsi1m},${currentPrice}\n`;
+  const logData = `${timestamp},${symbol},${rsi15m},${rsi1m},${currentPrice}\n`;
 
   fs.appendFile(RSI_LOG_FILE, logData, (err) => {
     if (err) console.error('Error writing to RSI log file:', err);
@@ -140,9 +140,9 @@ const logRSIAndPrice = (symbol, rsi4h, rsi1m, currentPrice) => {
 };
 
 // Log buy signals
-const logBuySignal = (symbol, rsi4h, rsi1m, buyPrice, sellPrice, duration, bottomPrice, percentageDrop, btcChange, btcChange30m) => {
+const logBuySignal = (symbol, rsi15m, rsi1m, buyPrice, sellPrice, duration, bottomPrice, percentageDrop, btcChange, btcChange30m) => {
   const timestamp = moment().format('YYYY-MM-DD HH:mm:ss');
-  const logData = `${timestamp},${symbol},${rsi4h},${rsi1m},${buyPrice},${sellPrice},${duration},${bottomPrice},${percentageDrop},${btcChange},${btcChange30m}\n`;
+  const logData = `${timestamp},${symbol},${rsi15m},${rsi1m},${buyPrice},${sellPrice},${duration},${bottomPrice},${percentageDrop},${btcChange},${btcChange30m}\n`;
 
 //  fs.appendFile(BUY_SIGNAL_LOG_FILE, logData, (err) => {
 //    if (err) console.error('Error writing to buy_signals.csv:', err);
@@ -152,23 +152,23 @@ const logBuySignal = (symbol, rsi4h, rsi1m, buyPrice, sellPrice, duration, botto
 
 // Handle RSI logic
 export const handleRSI = async (symbol, token, chatId) => {
-  const prices4h = await fetchCandlestickData(symbol, '4h');
+  const prices15m = await fetchCandlestickData(symbol, '15m');
   const prices1m = await fetchCandlestickData(symbol, '1m');
   const btcData = await calculateBTCChanges();
 
-  if (!prices4h || !prices1m) return;
+  if (!prices15m || !prices1m) return;
 
-  const rsi4h = calculateRSI(prices4h);
+  const rsi15m = calculateRSI(prices15m);
   const rsi1m = calculateRSI(prices1m);
   const currentPrice = prices1m[prices1m.length - 1];
 
-  console.log(`RSI for ${symbol}: 4h = ${rsi4h}, 1m = ${rsi1m}, Price = ${currentPrice}`);
+  console.log(`RSI for ${symbol}: 15m = ${rsi15m}, 1m = ${rsi1m}, Price = ${currentPrice}`);
 
   // Log RSI and price data
-  logRSIAndPrice(symbol, rsi4h, rsi1m, currentPrice);
+  logRSIAndPrice(symbol, rsi15m, rsi1m, currentPrice);
 
   // Check for buy signal
-  if (rsi4h > RSI_THRESHOLD_4h && rsi1m < RSI_THRESHOLD_1m) {
+  if (rsi15m < RSI_THRESHOLD_15m && rsi1m > RSI_THRESHOLD_1m) {
     const currentTime = moment();
     const lastNotificationTime = lastNotificationTimes[symbol];
 
@@ -248,7 +248,7 @@ export const checkTargetAchieved = async (token, chatId) => {
       await editTelegramMessage(token, chatId, messageId, newMessage);
 
       // Log buy signal
-      logBuySignal(symbol, RSI_THRESHOLD_4h, RSI_THRESHOLD_1m, buyPrice, sellPrice, period, bottomPrice, percentageDrop, btcChange, btcData.change30m);
+      logBuySignal(symbol, RSI_THRESHOLD_15m, RSI_THRESHOLD_1m, buyPrice, sellPrice, period, bottomPrice, percentageDrop, btcChange, btcData.change30m);
 
       // Cleanup
       delete sellPrices[symbol];
