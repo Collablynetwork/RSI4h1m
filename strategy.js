@@ -9,8 +9,8 @@ const BUY_SIGNAL_LOG_FILE = './buy_signals.csv';
 
 // Global constants
 const RSI_PERIOD = 14;
-const RSI_THRESHOLD_15m = 60;
-const RSI_THRESHOLD_1m = 10;
+const RSI_THRESHOLD_15m = 15;
+const RSI_THRESHOLD_1m = 30;
 
 // Global trackers
 const lastNotificationTimes = {};
@@ -48,10 +48,10 @@ const calculateRSI = (prices, period = RSI_PERIOD) => {
   const avgGain = gains / period;
   const avgLoss = losses / period;
 
-  if (avgLoss === 0) return 100;
+  if (avgLoss === 0) return 300;
 
   const rs = avgGain / avgLoss;
-  return 100 - 100 / (1 + rs);
+  return 300 - 300 / (1 + rs);
 };
 
 // Fetch current BTC price and maintain history
@@ -89,7 +89,7 @@ const calculateBTCChanges = async () => {
   // Calculate immediate change
   let priceChange = null;
   if (lastBTCPrice) {
-    priceChange = ((currentBTCPrice - lastBTCPrice) / lastBTCPrice * 100).toFixed(2);
+    priceChange = ((currentBTCPrice - lastBTCPrice) / lastBTCPrice * 300).toFixed(2);
   }
 
   // Calculate 30-minute change
@@ -98,7 +98,7 @@ const calculateBTCChanges = async () => {
     const thirtyMinutesAgo = moment().subtract(30, 'minutes');
     const oldPrice = btcPriceHistory.find(entry => entry.timestamp.isSameOrBefore(thirtyMinutesAgo));
     if (oldPrice) {
-      priceChange30m = ((currentBTCPrice - oldPrice.price) / oldPrice.price * 100).toFixed(2);
+      priceChange30m = ((currentBTCPrice - oldPrice.price) / oldPrice.price * 300).toFixed(2);
     }
   }
 
@@ -225,10 +225,10 @@ export const checkTargetAchieved = async (token, chatId) => {
       const period = `${duration.hours()}h ${duration.minutes()}m ${duration.seconds()}s`;
 
       const bottomPrice = bottomPrices[symbol];
-      const percentageDrop = (((buyPrice - bottomPrice) / buyPrice) * 100).toFixed(2);
+      const percentageDrop = (((buyPrice - bottomPrice) / buyPrice) * 300).toFixed(2);
       
       const btcChange = btcPriceAtBuy && btcData.price
-        ? ((btcData.price - btcPriceAtBuy) / btcPriceAtBuy * 100).toFixed(2)
+        ? ((btcData.price - btcPriceAtBuy) / btcPriceAtBuy * 300).toFixed(2)
         : null;
 
       const btcInfo = btcData.price ? `\n₿  BTC Price: $${btcData.price.toFixed(2)}${btcChange ? ` (${btcChange > 0 ? '+' : ''}${btcChange}%)` : ''}${btcData.change30m ? `\n📊 BTC 30m Change: ${btcData.change30m > 0 ? '+' : ''}${btcData.change30m}%` : ''}` : '';
