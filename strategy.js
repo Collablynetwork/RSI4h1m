@@ -9,7 +9,7 @@ const BUY_SIGNAL_LOG_FILE = './buy_signals.csv'; // File to log buy signal detai
 
 // Global constants
 const RSI_PERIOD = 14; // Period for RSI calculation
-const RSI_THRESHOLD_15m = 10; // RSI threshold for 15-minute candles
+const RSI_THRESHOLD_15m = 15; // RSI threshold for 15-minute candles
 const RSI_THRESHOLD_1m = 30; // RSI threshold for 1-minute candles
 
 // Global trackers
@@ -165,8 +165,12 @@ export const handleRSI = async (symbol, token, chatId) => {
 
   if (existingSignal) {
     // Update existing signal if sell price has not been achieved
-    if (currentPrice < existingSignal.sellPrice && (entryPrices[symbol].length === 0 || currentPrice < entryPrices[symbol][0])) {
-      entryPrices[symbol].unshift(currentPrice); // Add new entry price if lower
+    if (
+      currentPrice < existingSignal.sellPrice &&
+      (entryPrices[symbol].length === 0 || currentPrice <= entryPrices[symbol][0] * 0.99)
+    ) {
+      entryPrices[symbol].unshift(currentPrice); // Add new entry price if the difference is at least 1%
+
       const updatedMessage = `
 📢 **Buy Signal**
 💎 Token: #${symbol}
@@ -190,7 +194,12 @@ export const handleRSI = async (symbol, token, chatId) => {
 
     if (!entryPrices[symbol]) entryPrices[symbol] = []; // Initialize entry prices array if not present
 
-    entryPrices[symbol].unshift(currentPrice); // Add the first entry price
+    if (
+      entryPrices[symbol].length === 0 || 
+      currentPrice <= entryPrices[symbol][0] * 0.99
+    ) {
+      entryPrices[symbol].unshift(currentPrice); // Add new entry price if the difference is at least 1%
+    }
 
     const sellPrice = (entryPrices[symbol][0] * 1.011).toFixed(8); // Calculate sell price based on first entry price
     const message = `
